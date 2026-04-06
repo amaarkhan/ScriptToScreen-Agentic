@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project-montage/phase2/phase2_artifacts.schema.json",
+  "title": "Phase 2 Artifacts",
+  "type": "object",
+  "required": ["schema_version", "request_id", "artifacts"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "request_id": { "type": "string", "minLength": 1 },
+    "artifacts": {
+      "type": "object",
+      "required": ["audio_tracks", "frame_sequences", "video_scenes", "raw_scenes", "task_graph_logs"],
+      "additionalProperties": false,
+      "properties": {
+        "audio_tracks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/audio_artifact" }
+        },
+        "frame_sequences": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/frame_artifact" }
+        },
+        "video_scenes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/video_artifact" }
+        },
+        "raw_scenes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/video_artifact" }
+        },
+        "task_graph_logs": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/log_artifact" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "audio_artifact": {
+      "type": "object",
+      "required": ["artifact_id", "path", "scene_id", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "scene_id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "const": "wav" },
+        "duration_seconds": { "type": "number", "minimum": 0 }
+      }
+    },
+    "frame_artifact": {
+      "type": "object",
+      "required": ["artifact_id", "path", "scene_id", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "scene_id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "const": "frame_sequence" },
+        "frame_count": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "video_artifact": {
+      "type": "object",
+      "required": ["artifact_id", "path", "scene_id", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "scene_id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "const": "mp4" },
+        "duration_seconds": { "type": "number", "minimum": 0 }
+      }
+    },
+    "log_artifact": {
+      "type": "object",
+      "required": ["artifact_id", "path", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "const": "task_graph_log" }
+      }
+    }
+  }
+}

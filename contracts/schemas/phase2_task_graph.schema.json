@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project-montage/phase2/phase2_task_graph.schema.json",
+  "title": "Phase 2 Task Graph",
+  "type": "object",
+  "required": ["schema_version", "request_id", "scene_tasks"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "request_id": { "type": "string", "minLength": 1 },
+    "scene_tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/scene_task" }
+    }
+  },
+  "$defs": {
+    "scene_task": {
+      "type": "object",
+      "required": ["scene_id", "order", "audio_tasks", "video_tasks", "sync_tasks"],
+      "additionalProperties": false,
+      "properties": {
+        "scene_id": { "type": "string", "minLength": 1 },
+        "order": { "type": "integer", "minimum": 1 },
+        "audio_tasks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/task_item" }
+        },
+        "video_tasks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/task_item" }
+        },
+        "sync_tasks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/task_item" }
+        }
+      }
+    },
+    "task_item": {
+      "type": "object",
+      "required": ["task_id", "type", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "task_id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "status": {
+          "type": "string",
+          "enum": ["queued", "running", "completed", "failed", "resumable"]
+        },
+        "depends_on": { "type": "array", "items": { "type": "string" } },
+        "tool": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

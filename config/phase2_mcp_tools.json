@@ -1,0 +1,92 @@
+{
+  "tools": [
+    {
+      "name": "get_task_graph",
+      "capability": "task_graph_generation",
+      "schema": {
+        "required": ["request_id", "scene_manifest_path"],
+        "types": {
+          "request_id": "string",
+          "scene_manifest_path": "string"
+        }
+      }
+    },
+    {
+      "name": "commit_memory",
+      "capability": "commit_memory",
+      "schema": {
+        "required": ["request_id", "output_dir"],
+        "types": {
+          "request_id": "string",
+          "output_dir": "string"
+        }
+      }
+    },
+    {
+      "name": "voice_cloning_synthesizer",
+      "capability": "voice_synthesis",
+      "schema": {
+        "required": ["request_id", "scene_id", "speaker", "dialogue", "emotion", "output_dir"],
+        "types": {
+          "request_id": "string",
+          "scene_id": "string",
+          "speaker": "string",
+          "dialogue": "string",
+          "emotion": "string",
+          "output_dir": "string"
+        }
+      }
+    },
+    {
+      "name": "query_stock_footage",
+      "capability": "video_generation",
+      "schema": {
+        "required": ["request_id", "scene_id", "location", "output_dir"],
+        "types": {
+          "request_id": "string",
+          "scene_id": "string",
+          "location": "string",
+          "output_dir": "string"
+        }
+      }
+    },
+    {
+      "name": "face_swapper",
+      "capability": "face_swap",
+      "schema": {
+        "required": ["request_id", "scene_id", "source_video_path", "output_dir"],
+        "types": {
+          "request_id": "string",
+          "scene_id": "string",
+          "source_video_path": "string",
+          "output_dir": "string"
+        }
+      }
+    },
+    {
+      "name": "identity_validator",
+      "capability": "identity_validation",
+      "schema": {
+        "required": ["scene_id"],
+        "types": {
+          "scene_id": "string"
+        }
+      }
+    },
+    {
+      "name": "lip_sync_aligner",
+      "capability": "lip_sync",
+      "schema": {
+        "required": ["request_id", "scene_id", "audio_path", "video_path", "output_dir"],
+        "types": {
+          "request_id": "string",
+          "scene_id": "string",
+          "audio_path": "string",
+          "video_path": "string",
+          "output_dir": "string",
+          "scene_order": "integer"
+        }
+      }
+    }
+  ]
+}

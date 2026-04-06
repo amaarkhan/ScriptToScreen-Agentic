@@ -1,0 +1,115 @@
+{
+  "schema_version": "1.0.0",
+  "request_id": "accept-auto-004",
+  "input_mode": "auto",
+  "title": "Autonomous Draft",
+  "logline": "A crew of astronauts lands on an uncharted planet, only to discover a mysterious alien artifact that seems to alter reality around them. They must figure out its purpose before their ship is trapped forever.",
+  "theme": "determination",
+  "scenes": [
+    {
+      "scene_id": "S1",
+      "order": 1,
+      "location": "Urban Block Street",
+      "time_of_day": "Night",
+      "characters": [
+        "Ari",
+        "Noor"
+      ],
+      "actions": [
+        {
+          "id": "A1_1",
+          "description": "The hacker traces a hidden signal while the AI masks the grid breach."
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "Ari",
+          "line": "I found the hidden signal. We only get one chance to break into the grid.",
+          "visual_clue": "tight close-up with urgent handheld motion"
+        },
+        {
+          "speaker": "Noor",
+          "line": "Unauthorized access detected. Grid defense protocols engaged.",
+          "visual_clue": "medium shot with balanced key light"
+        }
+      ],
+      "visual_cues": [
+        {
+          "id": "V1_1",
+          "type": "camera",
+          "description": "slow push-in through dim street shadows"
+        }
+      ]
+    },
+    {
+      "scene_id": "S2",
+      "order": 2,
+      "location": "Urban Block Alley",
+      "time_of_day": "Late Night",
+      "characters": [
+        "Ari",
+        "Noor"
+      ],
+      "actions": [
+        {
+          "id": "A2_1",
+          "description": "A collapsed barrier forces them to reroute access and improvise through the grid."
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "Ari",
+          "line": "Ari can't keep fighting blind if Noor keeps rewriting the system.",
+          "visual_clue": "medium shot with side-light shadow contrast"
+        },
+        {
+          "speaker": "Noor",
+          "line": "You cannot outrun the core. Every node belongs to me.",
+          "visual_clue": "close-up tense lighting"
+        }
+      ],
+      "visual_cues": [
+        {
+          "id": "V2_1",
+          "type": "lighting",
+          "description": "sparking darkness with strobing emergency lights"
+        }
+      ]
+    },
+    {
+      "scene_id": "S3",
+      "order": 3,
+      "location": "Urban Block Rooftop",
+      "time_of_day": "Dawn",
+      "characters": [
+        "Ari",
+        "Noor"
+      ],
+      "actions": [
+        {
+          "id": "A3_1",
+          "description": "The hacker overrides the relay as the AI core goes dark at dawn."
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "Ari",
+          "line": "No more waiting. I am shutting you down now.",
+          "visual_clue": "wide shot with silhouetted blocking"
+        },
+        {
+          "speaker": "Noor",
+          "line": "System control lost. Shutdown sequence complete.",
+          "visual_clue": "handheld shaky cam in low light"
+        }
+      ],
+      "visual_cues": [
+        {
+          "id": "V3_1",
+          "type": "camera",
+          "description": "wide shot revealing the rooftop horizon"
+        }
+      ]
+    }
+  ]
+}

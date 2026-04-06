@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project-montage/phase1/langgraph_state.schema.json",
+  "title": "LangGraph Phase 1 Global State",
+  "type": "object",
+  "required": [
+    "request_id",
+    "input_mode",
+    "raw_input",
+    "script",
+    "scenes",
+    "characters",
+    "images",
+    "status",
+    "errors",
+    "memory_refs"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input_mode": {
+      "type": "string",
+      "enum": ["manual", "auto"]
+    },
+    "raw_input": {
+      "type": "object",
+      "required": ["prompt", "script_text"],
+      "additionalProperties": false,
+      "properties": {
+        "prompt": { "type": ["string", "null"] },
+        "script_text": { "type": ["string", "null"] }
+      }
+    },
+    "script": {
+      "type": "object",
+      "required": ["title", "logline", "theme", "scenes"],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "logline": { "type": "string" },
+        "theme": { "type": "string" },
+        "scenes": {
+          "type": "array"
+        }
+      }
+    },
+    "scenes": {
+      "type": "array"
+    },
+    "characters": {
+      "type": "array"
+    },
+    "images": {
+      "type": "array"
+    },
+    "memory_refs": {
+      "type": "object",
+      "required": ["script_history_ids", "character_memory_ids", "image_memory_ids"],
+      "additionalProperties": false,
+      "properties": {
+        "script_history_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "character_memory_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "image_memory_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "received",
+        "routing",
+        "validating",
+        "generating",
+        "awaiting_hitl",
+        "approved",
+        "revised",
+        "rejected",
+        "characterizing",
+        "imaging",
+        "memory_commit",
+        "completed",
+        "failed"
+      ]
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/error"
+      }
+    },
+    "audit": {
+      "type": "object",
+      "required": ["tool_calls", "node_history"],
+      "additionalProperties": false,
+      "properties": {
+        "tool_calls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tool_call"
+          }
+        },
+        "node_history": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "input_mode": { "const": "manual" }
+        }
+      },
+      "then": {
+        "properties": {
+          "raw_input": {
+            "properties": {
+              "script_text": { "type": "string", "minLength": 1 },
+              "prompt": { "type": "null" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "input_mode": { "const": "auto" }
+        }
+      },
+      "then": {
+        "properties": {
+          "raw_input": {
+            "properties": {
+              "prompt": { "type": "string", "minLength": 1 },
+              "script_text": { "type": "null" }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "error": {
+      "type": "object",
+      "required": ["code", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "details": {}
+      }
+    },
+    "tool_call": {
+      "type": "object",
+      "required": ["tool", "status", "timestamp"],
+      "additionalProperties": false,
+      "properties": {
+        "tool": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["success", "failure"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

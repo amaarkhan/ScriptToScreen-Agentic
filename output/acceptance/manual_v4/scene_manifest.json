@@ -1,0 +1,115 @@
+{
+  "schema_version": "1.0.0",
+  "request_id": "accept-manual-004",
+  "input_mode": "manual",
+  "title": "Manual Script",
+  "logline": "Validated uploaded script",
+  "theme": "User supplied",
+  "scenes": [
+    {
+      "scene_id": "S1",
+      "order": 1,
+      "location": "Mansion Foyer",
+      "time_of_day": "Night",
+      "characters": [
+        "Jonas",
+        "Lara"
+      ],
+      "actions": [
+        {
+          "id": "A1_1",
+          "description": "The door creaks as the group enters the dark foyer."
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "Lara",
+          "line": "This place gives me the chills.",
+          "visual_clue": "medium shot with balanced key light"
+        },
+        {
+          "speaker": "Jonas",
+          "line": "Keep your eyes open.",
+          "visual_clue": "medium shot with balanced key light"
+        }
+      ],
+      "visual_cues": [
+        {
+          "id": "V1_1",
+          "type": "camera",
+          "description": "steady cinematic framing with gentle push-in"
+        }
+      ]
+    },
+    {
+      "scene_id": "S2",
+      "order": 2,
+      "location": "Grand Hall",
+      "time_of_day": "Night",
+      "characters": [
+        "Jonas",
+        "Lara"
+      ],
+      "actions": [
+        {
+          "id": "A2_1",
+          "description": "Shadows flicker as chandeliers sway with a gust of wind."
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "Lara",
+          "line": "Did you hear that whisper?",
+          "visual_clue": "soft close-up with shallow depth of field"
+        },
+        {
+          "speaker": "Jonas",
+          "line": "Just the wind... I hope.",
+          "visual_clue": "medium shot with balanced key light"
+        }
+      ],
+      "visual_cues": [
+        {
+          "id": "V2_1",
+          "type": "camera",
+          "description": "steady cinematic framing with gentle push-in"
+        }
+      ]
+    },
+    {
+      "scene_id": "S3",
+      "order": 3,
+      "location": "Attic",
+      "time_of_day": "Midnight",
+      "characters": [
+        "Jonas",
+        "Lara"
+      ],
+      "actions": [
+        {
+          "id": "A3_1",
+          "description": "Dust swirls as an old chest rattles on its own."
+        }
+      ],
+      "dialogue": [
+        {
+          "speaker": "Lara",
+          "line": "The chest... it's moving!",
+          "visual_clue": "tight close-up with urgent handheld motion"
+        },
+        {
+          "speaker": "Jonas",
+          "line": "Run!",
+          "visual_clue": "tight close-up with urgent handheld motion"
+        }
+      ],
+      "visual_cues": [
+        {
+          "id": "V3_1",
+          "type": "camera",
+          "description": "steady cinematic framing with gentle push-in"
+        }
+      ]
+    }
+  ]
+}

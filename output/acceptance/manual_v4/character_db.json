@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0.0",
+  "request_id": "accept-manual-004",
+  "characters": [
+    {
+      "character_id": "CHAR_1",
+      "name": "Jonas",
+      "personality_traits": [
+        "determined"
+      ],
+      "appearance": {
+        "age_range": "20-35",
+        "build": "broad",
+        "hair": "buzz cut",
+        "face": "soft features",
+        "wardrobe": "layered casual"
+      },
+      "reference_style": "cinematic realistic",
+      "identity_consistency": {
+        "embedding_key": "emb_bf74e4a280affafb",
+        "version": "1",
+        "continuity_score": 1.0
+      },
+      "image_refs": [
+        {
+          "asset_id": "ASSET_7ef2344ba5",
+          "path": "output/acceptance/manual_v4/image_assets/char_1_ref.png",
+          "prompt_hash": "7ef2344ba5da0b43b2a5b5ce7f7fea89bf5a19fa5dc625e88fd210c003b4b8a7"
+        }
+      ],
+      "stock_footage_ref": {
+        "character_name": "Jonas",
+        "reference_id": "stock_b981af02358e",
+        "source": "local_stock_catalog",
+        "style_hint": "cinematic realistic"
+      }
+    },
+    {
+      "character_id": "CHAR_2",
+      "name": "Lara",
+      "personality_traits": [
+        "determined"
+      ],
+      "appearance": {
+        "age_range": "20-35",
+        "build": "broad",
+        "hair": "wavy brown",
+        "face": "soft features",
+        "wardrobe": "layered casual"
+      },
+      "reference_style": "cinematic realistic",
+      "identity_consistency": {
+        "embedding_key": "emb_2b2a0ff8f9def3f1",
+        "version": "1",
+        "continuity_score": 1.0
+      },
+      "image_refs": [
+        {
+          "asset_id": "ASSET_ea84b4492a",
+          "path": "output/acceptance/manual_v4/image_assets/char_2_ref.png",
+          "prompt_hash": "ea84b4492aa568d800bf641658d7b83d3480a65c1012321c5fcacfb7d1fac270"
+        }
+      ],
+      "stock_footage_ref": {
+        "character_name": "Lara",
+        "reference_id": "stock_cf2187921a89",
+        "source": "local_stock_catalog",
+        "style_hint": "cinematic realistic"
+      }
+    }
+  ]
+}

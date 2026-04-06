@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "request_id": "accept-auto-004",
+  "characters": [
+    {
+      "character_id": "CHAR_1",
+      "name": "Ari",
+      "personality_traits": [
+        "decisive",
+        "strategic"
+      ],
+      "appearance": {
+        "age_range": "20-35",
+        "build": "lean",
+        "hair": "long tied",
+        "face": "sharp jawline",
+        "wardrobe": "streetwear jacket"
+      },
+      "reference_style": "cinematic realistic",
+      "identity_consistency": {
+        "embedding_key": "emb_d2efaa6dd6ae6136",
+        "version": "1",
+        "continuity_score": 1.0
+      },
+      "image_refs": [
+        {
+          "asset_id": "ASSET_1c986a1bf0",
+          "path": "output/acceptance/auto_v4/image_assets/char_1_ref.png",
+          "prompt_hash": "1c986a1bf05143e3aac01780552779001cff2b64902d49df74c78e7e2467a090"
+        }
+      ],
+      "stock_footage_ref": {
+        "character_name": "Ari",
+        "reference_id": "stock_aafb7defb631",
+        "source": "local_stock_catalog",
+        "style_hint": "cinematic realistic"
+      }
+    },
+    {
+      "character_id": "CHAR_2",
+      "name": "Noor",
+      "personality_traits": [
+        "determined"
+      ],
+      "appearance": {
+        "age_range": "20-35",
+        "build": "broad",
+        "hair": "long tied",
+        "face": "soft features",
+        "wardrobe": "layered casual"
+      },
+      "reference_style": "cinematic realistic",
+      "identity_consistency": {
+        "embedding_key": "emb_92a70799e19d8734",
+        "version": "1",
+        "continuity_score": 1.0
+      },
+      "image_refs": [
+        {
+          "asset_id": "ASSET_a1b7158317",
+          "path": "output/acceptance/auto_v4/image_assets/char_2_ref.png",
+          "prompt_hash": "a1b7158317f8eab18f3e6eccb9e76e2e26e25b43f4ec89195187cf02a7e90124"
+        }
+      ],
+      "stock_footage_ref": {
+        "character_name": "Noor",
+        "reference_id": "stock_e90a47d05584",
+        "source": "local_stock_catalog",
+        "style_hint": "cinematic realistic"
+      }
+    }
+  ]
+}

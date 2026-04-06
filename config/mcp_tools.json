@@ -1,0 +1,61 @@
+{
+  "tools": [
+    {
+      "name": "generate_script_segment",
+      "capability": "script_generation",
+      "schema": {
+        "required": ["prompt", "num_scenes"],
+        "types": {
+          "prompt": "string",
+          "num_scenes": "integer"
+        }
+      }
+    },
+    {
+      "name": "validate_script",
+      "capability": "manual_script_validation",
+      "schema": {
+        "required": ["script_text"],
+        "types": {
+          "script_text": "string"
+        }
+      }
+    },
+    {
+      "name": "generate_character_image",
+      "capability": "image_synthesis",
+      "schema": {
+        "required": ["characters", "output_dir"],
+        "types": {
+          "characters": "array",
+          "output_dir": "string"
+        }
+      }
+    },
+    {
+      "name": "query_stock_footage",
+      "capability": "stock_footage_query",
+      "schema": {
+        "required": ["characters", "prompt"],
+        "types": {
+          "characters": "array",
+          "prompt": "string"
+        }
+      }
+    },
+    {
+      "name": "commit_memory",
+      "capability": "memory_commit",
+      "schema": {
+        "required": ["request_id", "script", "characters", "images", "memory_dir"],
+        "types": {
+          "request_id": "string",
+          "script": "object",
+          "characters": "array",
+          "images": "array",
+          "memory_dir": "string"
+        }
+      }
+    }
+  ]
+}

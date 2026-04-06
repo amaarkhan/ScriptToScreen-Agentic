@@ -1,0 +1,150 @@
+{
+  "schema_version": "1.0.0",
+  "request_id": "accept-auto-004",
+  "scene_tasks": [
+    {
+      "scene_id": "S1",
+      "order": 1,
+      "audio_tasks": [
+        {
+          "task_id": "S1_A1",
+          "type": "voice_synthesis",
+          "status": "queued",
+          "tool": "voice_cloning_synthesizer",
+          "depends_on": [],
+          "scene_id": "S1",
+          "speaker": "Ari"
+        }
+      ],
+      "video_tasks": [
+        {
+          "task_id": "S1_V1",
+          "type": "video_generation",
+          "status": "queued",
+          "tool": "query_stock_footage",
+          "depends_on": [],
+          "scene_id": "S1"
+        },
+        {
+          "task_id": "S1_F1",
+          "type": "face_swap",
+          "status": "queued",
+          "tool": "face_swapper",
+          "depends_on": [
+            "S1_V1"
+          ],
+          "scene_id": "S1"
+        }
+      ],
+      "sync_tasks": [
+        {
+          "task_id": "S1_L1",
+          "type": "lip_sync",
+          "status": "queued",
+          "tool": "lip_sync_aligner",
+          "depends_on": [
+            "S1_A1",
+            "S1_F1"
+          ],
+          "scene_id": "S1"
+        }
+      ]
+    },
+    {
+      "scene_id": "S2",
+      "order": 2,
+      "audio_tasks": [
+        {
+          "task_id": "S2_A1",
+          "type": "voice_synthesis",
+          "status": "queued",
+          "tool": "voice_cloning_synthesizer",
+          "depends_on": [],
+          "scene_id": "S2",
+          "speaker": "Ari"
+        }
+      ],
+      "video_tasks": [
+        {
+          "task_id": "S2_V1",
+          "type": "video_generation",
+          "status": "queued",
+          "tool": "query_stock_footage",
+          "depends_on": [],
+          "scene_id": "S2"
+        },
+        {
+          "task_id": "S2_F1",
+          "type": "face_swap",
+          "status": "queued",
+          "tool": "face_swapper",
+          "depends_on": [
+            "S2_V1"
+          ],
+          "scene_id": "S2"
+        }
+      ],
+      "sync_tasks": [
+        {
+          "task_id": "S2_L1",
+          "type": "lip_sync",
+          "status": "queued",
+          "tool": "lip_sync_aligner",
+          "depends_on": [
+            "S2_A1",
+            "S2_F1"
+          ],
+          "scene_id": "S2"
+        }
+      ]
+    },
+    {
+      "scene_id": "S3",
+      "order": 3,
+      "audio_tasks": [
+        {
+          "task_id": "S3_A1",
+          "type": "voice_synthesis",
+          "status": "queued",
+          "tool": "voice_cloning_synthesizer",
+          "depends_on": [],
+          "scene_id": "S3",
+          "speaker": "Ari"
+        }
+      ],
+      "video_tasks": [
+        {
+          "task_id": "S3_V1",
+          "type": "video_generation",
+          "status": "queued",
+          "tool": "query_stock_footage",
+          "depends_on": [],
+          "scene_id": "S3"
+        },
+        {
+          "task_id": "S3_F1",
+          "type": "face_swap",
+          "status": "queued",
+          "tool": "face_swapper",
+          "depends_on": [
+            "S3_V1"
+          ],
+          "scene_id": "S3"
+        }
+      ],
+      "sync_tasks": [
+        {
+          "task_id": "S3_L1",
+          "type": "lip_sync",
+          "status": "queued",
+          "tool": "lip_sync_aligner",
+          "depends_on": [
+            "S3_A1",
+            "S3_F1"
+          ],
+          "scene_id": "S3"
+        }
+      ]
+    }
+  ]
+}
