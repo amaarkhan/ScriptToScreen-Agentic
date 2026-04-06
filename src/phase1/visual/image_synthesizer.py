@@ -7,7 +7,7 @@ from typing import Any
 
 from PIL import Image, ImageDraw
 
-from .comfyui_adapter import try_generate_via_comfyui
+from phase1.mcp.external_providers import comfyui_generate_image
 
 
 def _palette_for_name(name: str) -> tuple[tuple[int, int, int], tuple[int, int, int]]:
@@ -40,15 +40,47 @@ def _render_reference_image(path: Path, name: str, style: str) -> None:
     img.save(path, format="PNG")
 
 
-def generate_character_images(characters: list[dict[str, Any]], output_dir: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def generate_character_images(
+    characters: list[dict[str, Any]],
+    output_dir: str,
+    endpoint_url: str | None = None,
+    timeout_seconds: int = 900,
+    require_comfyui: bool = False,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     if not characters:
         return [], [{"code": "IMG_NO_CHARACTERS", "message": "No characters available for image synthesis."}]
 
-    if not os.environ.get("COMFYUI_URL"):
+    legacy_base = os.environ.get("COMFYUI_URL", "").strip().rstrip("/")
+    legacy_endpoint = f"{legacy_base}/generate" if legacy_base else ""
+    resolved_endpoint = (endpoint_url or os.environ.get("COMFYUI_GENERATE_URL", "") or legacy_endpoint).strip()
+    if not resolved_endpoint:
+        if not require_comfyui:
+            out = Path(output_dir)
+            out.mkdir(parents=True, exist_ok=True)
+            images: list[dict[str, Any]] = []
+            for profile in characters:
+                character_id = str(profile["character_id"])
+                name = str(profile["name"])
+                style = str(profile.get("reference_style", "cinematic realistic"))
+                prompt_material = f"{name}|{style}|{profile.get('appearance', {})}"
+                prompt_hash = hashlib.sha256(prompt_material.encode("utf-8")).hexdigest()
+                asset_id = f"ASSET_{prompt_hash[:10]}"
+                path = out / f"{character_id.lower()}_ref.png"
+                _render_reference_image(path, name, style)
+                ref = {
+                    "asset_id": asset_id,
+                    "character_id": character_id,
+                    "path": path.as_posix(),
+                    "prompt_hash": prompt_hash,
+                }
+                images.append(ref)
+                profile["image_refs"].append(ref)
+            return images, []
+
         return [], [
             {
-                "code": "IMG_COMFYUI_REQUIRED",
-                "message": "COMFYUI_URL is not set. Phase 1 image generation requires ComfyUI for teacher compliance.",
+                "code": "IMG_COMFYUI_ENDPOINT_REQUIRED",
+                "message": "COMFYUI_GENERATE_URL (or COMFYUI_URL) is not set. Phase 1 image generation requires an MCP-configured ComfyUI generate endpoint.",
             }
         ]
 
@@ -66,13 +98,27 @@ def generate_character_images(characters: list[dict[str, Any]], output_dir: str)
         asset_id = f"ASSET_{prompt_hash[:10]}"
         path = out / f"{character_id.lower()}_ref.png"
 
-        generated = try_generate_via_comfyui(
+        generated = comfyui_generate_image(
             prompt=f"Character reference for {name}",
             output_path=path.as_posix(),
             style=style,
             metadata={"appearance": profile.get("appearance", {}), "prompt_hash": prompt_hash},
+            endpoint_url=resolved_endpoint,
+            timeout_seconds=timeout_seconds,
         )
         if not generated:
+            if not require_comfyui:
+                _render_reference_image(path, name, style)
+                ref = {
+                    "asset_id": asset_id,
+                    "character_id": character_id,
+                    "path": path.as_posix(),
+                    "prompt_hash": prompt_hash,
+                }
+                images.append(ref)
+                profile["image_refs"].append(ref)
+                continue
+
             errors.append(
                 {
                     "code": "IMG_COMFYUI_GENERATION_FAILED",

@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import json
 import re
 from typing import Any
+
+from phase1.mcp.external_providers import groq_chat_completion
 
 SCENE_PATTERN = re.compile(r"^(?:SCENE\s*(\d+)?)\s*[:\-]\s*(.+)$", re.IGNORECASE)
 ALT_SCENE_PATTERN = re.compile(r"^(INT\.|EXT\.|INT/EXT\.)\s+(.+)$", re.IGNORECASE)
 SPEAKER_PATTERN = r"[A-Za-z][A-Za-z0-9_.\- ]{0,40}"
 DIALOGUE_PATTERN = re.compile(rf"^(?!ACTION\b)({SPEAKER_PATTERN})\s*[:\-—]\s*(.+)$")
 QUOTED_DIALOGUE_PATTERN = re.compile(rf'^(?!ACTION\b)({SPEAKER_PATTERN})\s*[:\-—]\s*["“]?(.+?)["”]?$')
+SPEAKER_PREFIX_PATTERN = re.compile(r"^([A-Za-z][A-Za-z0-9_.\- ]{0,40})\s*:\s*(.+)$")
 
 
 def _split_location_time(scene_tail: str) -> tuple[str, str]:
@@ -236,7 +240,165 @@ def _extract_auto_cast(prompt: str) -> tuple[str, str]:
     return "Ari", "Noor"
 
 
-def build_auto_script(prompt: str, num_scenes: int = 3) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+def _normalize_llm_script(payload: dict[str, Any], prompt: str) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    scenes_in = payload.get("scenes")
+    if not isinstance(scenes_in, list) or not scenes_in:
+        return None, [
+            _error(
+                "SWRITER_LLM_INVALID_OUTPUT",
+                "LLM output is missing scenes array.",
+                "Return valid JSON with a non-empty 'scenes' array.",
+            )
+        ]
+
+    scenes: list[dict[str, Any]] = []
+    for idx, item in enumerate(scenes_in, start=1):
+        if not isinstance(item, dict):
+            continue
+        location = str(item.get("location", "Unknown")).strip() or "Unknown"
+        time_of_day = str(item.get("time_of_day", "Unknown")).strip() or "Unknown"
+        actions_in = item.get("actions", [])
+        if not isinstance(actions_in, list):
+            actions_in = []
+        actions = [str(a).strip() for a in actions_in if str(a).strip()]
+        if not actions:
+            actions = ["Action beat generated from model response."]
+
+        dialogue_in = item.get("dialogue", [])
+        if not isinstance(dialogue_in, list):
+            dialogue_in = []
+        dialogue: list[dict[str, str]] = []
+        for row in dialogue_in:
+            if isinstance(row, dict):
+                speaker = str(row.get("speaker", "Unknown")).strip() or "Unknown"
+                line = str(row.get("line", "")).strip()
+                visual_clue = str(row.get("visual_clue", _visual_from_dialogue(line))).strip() or _visual_from_dialogue(line)
+            else:
+                speaker = "Unknown"
+                line = str(row).strip()
+                match = SPEAKER_PREFIX_PATTERN.match(line)
+                if match:
+                    speaker = _sanitize_character(match.group(1))
+                    line = match.group(2).strip()
+                visual_clue = _visual_from_dialogue(line)
+            if not line:
+                continue
+            dialogue.append(
+                {
+                    "speaker": speaker,
+                    "line": line,
+                    "visual_clue": visual_clue,
+                }
+            )
+        if not dialogue:
+            return None, [
+                _error(
+                    "SWRITER_LLM_INVALID_OUTPUT",
+                    f"Scene {idx} has no valid dialogue lines.",
+                    "Ensure each scene has at least one dialogue line with speaker and line.",
+                )
+            ]
+
+        visual_cues_in = item.get("visual_cues", [])
+        visual_override = None
+        if isinstance(visual_cues_in, list) and visual_cues_in:
+            first = visual_cues_in[0]
+            if isinstance(first, dict):
+                visual_override = {
+                    "type": str(first.get("type", "camera")).strip() or "camera",
+                    "description": str(first.get("description", "steady cinematic framing with gentle push-in")).strip()
+                    or "steady cinematic framing with gentle push-in",
+                }
+            else:
+                visual_override = {
+                    "type": "camera",
+                    "description": str(first).strip() or "steady cinematic framing with gentle push-in",
+                }
+
+        scenes.append(
+            _build_scene(
+                scene_index=idx,
+                location=location,
+                time_of_day=time_of_day,
+                actions=actions,
+                dialogue=dialogue,
+                visual_override=visual_override,
+            )
+        )
+
+    if not scenes:
+        return None, [
+            _error(
+                "SWRITER_LLM_INVALID_OUTPUT",
+                "LLM output did not contain any valid scene objects.",
+                "Return scenes as an array of JSON objects with location, time_of_day, actions, dialogue, and visual_cues.",
+            )
+        ]
+
+    # If the model returns dialogue text without reliable speaker attribution,
+    # recover a stable two-character cast to preserve downstream identity outputs.
+    all_speakers = {
+        str(line.get("speaker", "")).strip()
+        for scene in scenes
+        for line in scene.get("dialogue", [])
+        if str(line.get("speaker", "")).strip()
+    }
+    if all_speakers == {"Unknown"}:
+        inferred_a, inferred_b = _extract_auto_cast(prompt)
+        speaker_cycle = [inferred_a, inferred_b]
+        cursor = 0
+        for scene in scenes:
+            for line in scene.get("dialogue", []):
+                line["speaker"] = speaker_cycle[cursor % len(speaker_cycle)]
+                cursor += 1
+            scene["characters"] = sorted({line["speaker"] for line in scene.get("dialogue", [])})
+
+    normalized = {
+        "title": str(payload.get("title", "Autonomous Draft")).strip() or "Autonomous Draft",
+        "logline": str(payload.get("logline", prompt)).strip() or prompt,
+        "theme": str(payload.get("theme", _extract_theme(prompt))).strip() or _extract_theme(prompt),
+        "scenes": scenes,
+    }
+    return normalized, []
+
+
+def _try_llm_script(prompt: str, num_scenes: int, llm_config: dict[str, Any]) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    api_base = str(llm_config.get("api_base", "")).strip()
+    api_key = str(llm_config.get("api_key", "")).strip()
+    model = str(llm_config.get("model", "gpt-4o-mini")).strip()
+
+    if not api_base:
+        return None, [
+            _error(
+                "SWRITER_LLM_CONFIG_MISSING",
+                "SCRIPTWRITER_API_BASE is not configured for LLM generation.",
+                "Set SCRIPTWRITER_API_BASE and SCRIPTWRITER_API_KEY in environment.",
+            )
+        ]
+    if not api_key:
+        return None, [
+            _error(
+                "SWRITER_LLM_CONFIG_MISSING",
+                "SCRIPTWRITER_API_KEY is not configured for LLM generation.",
+                "Set SCRIPTWRITER_API_KEY in environment.",
+            )
+        ]
+
+    try:
+        parsed = groq_chat_completion(prompt=prompt, num_scenes=num_scenes, api_base=api_base, api_key=api_key, model=model)
+    except Exception as exc:
+        return None, [
+            _error(
+                "SWRITER_LLM_REQUEST_FAILED",
+                "LLM request failed while generating screenplay.",
+                f"Check LLM endpoint/key/model. Details: {exc}",
+            )
+        ]
+
+    return _normalize_llm_script(parsed, prompt)
+
+
+def _build_auto_script_fallback(prompt: str, num_scenes: int = 3) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
     clean_prompt = prompt.strip()
     if not clean_prompt:
         return None, [_error("SWRITER_EMPTY_PROMPT", "Prompt is empty for autonomous generation.", "Provide a story prompt with goal, setting, or conflict.")]
@@ -347,3 +509,23 @@ def build_auto_script(prompt: str, num_scenes: int = 3) -> tuple[dict[str, Any] 
         "scenes": scenes,
     }
     return normalized, []
+
+
+def build_auto_script(
+    prompt: str,
+    num_scenes: int = 3,
+    llm_mode: str = "required",
+    llm_config: dict[str, Any] | None = None,
+) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    llm_config = llm_config or {}
+    llm_normalized, llm_errors = _try_llm_script(prompt, num_scenes, llm_config)
+    if llm_normalized is not None and not llm_errors:
+        return llm_normalized, []
+
+    if llm_mode == "required":
+        return None, llm_errors
+
+    fallback_normalized, fallback_errors = _build_auto_script_fallback(prompt, num_scenes)
+    if fallback_errors:
+        return None, llm_errors + fallback_errors
+    return fallback_normalized, []

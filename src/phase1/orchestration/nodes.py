@@ -145,6 +145,7 @@ def scriptwriter_node(state: WorkflowState) -> WorkflowState:
         {
             "prompt": prompt,
             "num_scenes": 3,
+            "llm_mode": state.get("test_flags", {}).get("llm_mode", "fallback"),
         },
     )
     if not mcp_result.get("ok"):
@@ -185,7 +186,18 @@ def hitl_node(state: WorkflowState) -> WorkflowState:
         state["next_node"] = "failed_node"
         return state
 
-    decision = state.get("hitl_decision", "approve")
+    decision = state.get("hitl_decision")
+    if decision not in {"approve", "revise", "reject"}:
+        _add_error(
+            state,
+            "HITL_DECISION_REQUIRED",
+            "Human review decision is required before workflow can continue.",
+            {"allowed_values": ["approve", "revise", "reject"]},
+        )
+        state["status"] = "rejected"
+        state["next_node"] = "rejected_node"
+        return state
+
     if decision == "approve":
         state["status"] = "approved"
         state["next_node"] = "character_node"
@@ -263,13 +275,14 @@ def image_node(state: WorkflowState) -> WorkflowState:
         return state
 
     base_output = state.get("test_flags", {}).get("output_dir", "output")
-    image_dir = Path(base_output) / "image_assets"
+    image_dir = Path(base_output) / "Images"
     mcp_result = _invoke_capability(
         state,
         "image_synthesis",
         {
             "characters": state["characters"],
             "output_dir": image_dir.as_posix(),
+            "require_comfyui": int(bool(state.get("test_flags", {}).get("require_comfyui", False))),
         },
     )
     if not mcp_result.get("ok"):

@@ -3,17 +3,29 @@
     {
       "name": "generate_script_segment",
       "capability": "script_generation",
+      "handler": "phase1.mcp.tools:tool_generate_script_segment",
+      "defaults": {
+        "llm_mode": "fallback",
+        "llm_api_base": "${SCRIPTWRITER_API_BASE}",
+        "llm_api_key": "${SCRIPTWRITER_API_KEY}",
+        "llm_model": "${SCRIPTWRITER_MODEL}"
+      },
       "schema": {
         "required": ["prompt", "num_scenes"],
         "types": {
           "prompt": "string",
-          "num_scenes": "integer"
+          "num_scenes": "integer",
+          "llm_mode": "string",
+          "llm_api_base": "string",
+          "llm_api_key": "string",
+          "llm_model": "string"
         }
       }
     },
     {
       "name": "validate_script",
       "capability": "manual_script_validation",
+      "handler": "phase1.mcp.tools:tool_validate_script",
       "schema": {
         "required": ["script_text"],
         "types": {
@@ -24,17 +36,27 @@
     {
       "name": "generate_character_image",
       "capability": "image_synthesis",
+      "handler": "phase1.mcp.tools:tool_generate_character_image",
+      "defaults": {
+        "endpoint_url": "${COMFYUI_GENERATE_URL}",
+        "timeout_seconds": 900,
+        "require_comfyui": 0
+      },
       "schema": {
         "required": ["characters", "output_dir"],
         "types": {
           "characters": "array",
-          "output_dir": "string"
+          "output_dir": "string",
+          "endpoint_url": "string",
+          "timeout_seconds": "integer",
+          "require_comfyui": "integer"
         }
       }
     },
     {
       "name": "query_stock_footage",
       "capability": "stock_footage_query",
+      "handler": "phase1.mcp.tools:tool_query_stock_footage",
       "schema": {
         "required": ["characters", "prompt"],
         "types": {
@@ -46,6 +68,7 @@
     {
       "name": "commit_memory",
       "capability": "memory_commit",
+      "handler": "phase1.mcp.tools:tool_commit_memory",
       "schema": {
         "required": ["request_id", "script", "characters", "images", "memory_dir"],
         "types": {

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -23,6 +24,19 @@ def run_case(case_name: str, state: dict) -> dict:
     return result
 
 
+def ask_hitl_decision(case_name: str) -> str:
+    forced = os.environ.get("PHASE1_HITL_DECISION", "").strip().lower()
+    if forced in {"approve", "revise", "reject"}:
+        print(f"{case_name}: using PHASE1_HITL_DECISION={forced}")
+        return forced
+
+    while True:
+        choice = input(f"{case_name} HITL decision [approve/revise/reject]: ").strip().lower()
+        if choice in {"approve", "revise", "reject"}:
+            return choice
+        print("Invalid choice. Please enter: approve, revise, or reject.")
+
+
 def main() -> None:
     root = Path("output/acceptance")
 
@@ -37,8 +51,12 @@ def main() -> None:
         ),
         script_text=None,
     )
-    auto_state["hitl_decision"] = "approve"
-    auto_state["test_flags"] = {"output_dir": (root / "auto_v4").as_posix()}
+    auto_state["hitl_decision"] = ask_hitl_decision("AUTO_V4")
+    auto_state["test_flags"] = {
+        "output_dir": (root / "auto_v4").as_posix(),
+        "require_comfyui": True,
+        "llm_mode": "required",
+    }
 
     # 🔥 NEW MANUAL TEST (User Script: Haunted Mansion)
     manual_state = empty_state(
@@ -61,8 +79,11 @@ Lara: The chest... it's moving!
 Jonas: Run!
 """,
     )
-    manual_state["hitl_decision"] = "approve"
-    manual_state["test_flags"] = {"output_dir": (root / "manual_v4").as_posix()}
+    manual_state["hitl_decision"] = ask_hitl_decision("MANUAL_V4")
+    manual_state["test_flags"] = {
+        "output_dir": (root / "manual_v4").as_posix(),
+        "require_comfyui": True,
+    }
 
     auto_result = run_case("AUTO_V4", auto_state)
     manual_result = run_case("MANUAL_V4", manual_state)

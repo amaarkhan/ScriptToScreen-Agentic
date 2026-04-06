@@ -239,7 +239,7 @@ Ivo: Then stop looking back.
     assert auto_keys == manual_keys
 
 
-def test_output_artifacts_use_image_assets_directory(tmp_path: Path) -> None:
+def test_output_artifacts_use_images_directory(tmp_path: Path) -> None:
     app = build_phase1_graph()
     state = empty_state(
         request_id="t-image-assets",
@@ -253,7 +253,7 @@ def test_output_artifacts_use_image_assets_directory(tmp_path: Path) -> None:
     out = app.invoke(state)
 
     assert out["status"] == "completed"
-    assert Path(out["artifacts"]["images_dir"]).name == "image_assets"
+    assert Path(out["artifacts"]["images_dir"]).name == "Images"
 
 
 def test_identity_consistency_detects_duplicate_normalized_names() -> None:
@@ -308,6 +308,22 @@ def test_hitl_revise_routes_back_then_completes() -> None:
 
     assert out["status"] == "rejected"
     assert any(err["code"] == "HITL_MAX_REVISIONS_EXCEEDED" for err in out["errors"])
+
+
+def test_hitl_requires_explicit_human_decision() -> None:
+    app = build_phase1_graph()
+    state = empty_state(
+        request_id="t-hitl-required",
+        input_mode="auto",
+        prompt="A tense rooftop standoff at dawn.",
+        script_text=None,
+    )
+    state["test_flags"] = {"llm_mode": "fallback"}
+
+    out = app.invoke(state)
+
+    assert out["status"] == "rejected"
+    assert any(err["code"] == "HITL_DECISION_REQUIRED" for err in out["errors"])
 
 
 def test_tool_failure_routes_to_failed() -> None:

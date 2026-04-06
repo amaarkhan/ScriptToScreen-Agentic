@@ -3,13 +3,20 @@ from __future__ import annotations
 import hashlib
 from typing import Any
 
-from phase1.intake import build_auto_script, normalize_manual_script
+from phase1.intake import normalize_manual_script
 from phase1.memory import commit_memory_bundle
-from phase1.visual import generate_character_images
+from .providers import comfyui_generate_images, groq_generate_script
 
 
 def tool_generate_script_segment(payload: dict[str, Any]) -> dict[str, Any]:
-    normalized, errors = build_auto_script(payload["prompt"], int(payload["num_scenes"]))
+    normalized, errors = groq_generate_script(
+        prompt=payload["prompt"],
+        num_scenes=int(payload["num_scenes"]),
+        llm_mode=str(payload.get("llm_mode", "required")),
+        llm_api_base=str(payload.get("llm_api_base", "")),
+        llm_api_key=str(payload.get("llm_api_key", "")),
+        llm_model=str(payload.get("llm_model", "")),
+    )
     return {"script": normalized, "errors": errors}
 
 
@@ -19,7 +26,13 @@ def tool_validate_script(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def tool_generate_character_image(payload: dict[str, Any]) -> dict[str, Any]:
-    images, errors = generate_character_images(payload["characters"], payload["output_dir"])
+    images, errors = comfyui_generate_images(
+        characters=payload["characters"],
+        output_dir=payload["output_dir"],
+        endpoint_url=payload.get("endpoint_url"),
+        timeout_seconds=int(payload.get("timeout_seconds", 900)),
+        require_comfyui=bool(int(payload.get("require_comfyui", 0))),
+    )
     return {"images": images, "errors": errors}
 
 
@@ -49,12 +62,3 @@ def tool_commit_memory(payload: dict[str, Any]) -> dict[str, Any]:
         memory_dir=payload["memory_dir"],
     )
     return {"memory_refs": memory_refs, "errors": []}
-
-
-TOOL_HANDLERS = {
-    "generate_script_segment": tool_generate_script_segment,
-    "validate_script": tool_validate_script,
-    "generate_character_image": tool_generate_character_image,
-    "query_stock_footage": tool_query_stock_footage,
-    "commit_memory": tool_commit_memory,
-}

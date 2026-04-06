@@ -7,7 +7,7 @@ Date: 2026-04-02
 - Dynamic MCP tool discovery from runtime registry config
 - Schema-validated MCP invocation (no hardcoded direct external calls in orchestration)
 - Persistent ChromaDB memory commit layer for script, character, and image records
-- Final artifact completeness including scene_manifest.json, character_db.json, and image_assets/
+- Final artifact completeness including scene_manifest.json, character_db.json, and Images/
 - Acceptance tests covering happy paths and MCP failure behavior
 
 ## MCP Runtime
@@ -49,7 +49,7 @@ Storage outputs:
 Generated in orchestration flow:
 - scene_manifest.json
 - character_db.json
-- image_assets/*.png
+- Images/*.png
 
 Artifact writers:
 - src/phase1/artifacts/writers.py
