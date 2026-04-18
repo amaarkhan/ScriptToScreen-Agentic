@@ -3,6 +3,7 @@
     {
       "name": "get_task_graph",
       "capability": "task_graph_generation",
+      "handler": "phase2.mcp.tools:tool_get_task_graph",
       "schema": {
         "required": ["request_id", "scene_manifest_path"],
         "types": {
@@ -14,6 +15,7 @@
     {
       "name": "commit_memory",
       "capability": "commit_memory",
+      "handler": "phase2.mcp.tools:tool_commit_memory",
       "schema": {
         "required": ["request_id", "output_dir"],
         "types": {
@@ -25,6 +27,7 @@
     {
       "name": "voice_cloning_synthesizer",
       "capability": "voice_synthesis",
+      "handler": "phase2.mcp.tools:tool_voice_cloning_synthesizer",
       "schema": {
         "required": ["request_id", "scene_id", "speaker", "dialogue", "emotion", "output_dir"],
         "types": {
@@ -40,6 +43,7 @@
     {
       "name": "query_stock_footage",
       "capability": "video_generation",
+      "handler": "phase2.mcp.tools:tool_query_stock_footage",
       "schema": {
         "required": ["request_id", "scene_id", "location", "output_dir"],
         "types": {
@@ -53,6 +57,7 @@
     {
       "name": "face_swapper",
       "capability": "face_swap",
+      "handler": "phase2.mcp.tools:tool_face_swapper",
       "schema": {
         "required": ["request_id", "scene_id", "source_video_path", "output_dir"],
         "types": {
@@ -66,16 +71,22 @@
     {
       "name": "identity_validator",
       "capability": "identity_validation",
+      "handler": "phase2.mcp.tools:tool_identity_validator",
       "schema": {
-        "required": ["scene_id"],
+        "required": ["scene_id", "source_video_path", "characters"],
         "types": {
-          "scene_id": "string"
+          "scene_id": "string",
+          "request_id": "string",
+          "source_video_path": "string",
+          "characters": "array",
+          "threshold": "number"
         }
       }
     },
     {
       "name": "lip_sync_aligner",
       "capability": "lip_sync",
+      "handler": "phase2.mcp.tools:tool_lip_sync_aligner",
       "schema": {
         "required": ["request_id", "scene_id", "audio_path", "video_path", "output_dir"],
         "types": {

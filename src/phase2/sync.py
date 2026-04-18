@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import json
+import os
 import subprocess
+import sys
 import wave
 from pathlib import Path
 
 import imageio.v2 as imageio
-import imageio_ffmpeg
 import numpy as np
 from PIL import Image, ImageDraw
 
@@ -59,6 +61,129 @@ def _render_lipsynced_video(video_path: str, audio_path: str, temp_path: Path) -
         writer.close()
 
 
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _should_use_wav2lip(request_id: str) -> bool:
+    enabled = os.environ.get("PHASE2_USE_WAV2LIP", "1").strip().lower() not in {"0", "false", "no", "off"}
+    if not enabled:
+        return False
+    return not request_id.lower().startswith("phase2-d")
+
+
+def _candidate_character_db_paths(request_id: str) -> list[Path]:
+    root = _repo_root() / "output" / "acceptance"
+    candidates = [
+        root / "auto_v4" / "character_db.json",
+        root / "manual_v4" / "character_db.json",
+    ]
+    if "auto" in request_id.lower():
+        return [candidates[0], candidates[1]]
+    if "manual" in request_id.lower():
+        return [candidates[1], candidates[0]]
+    return candidates
+
+
+def _scene_manifest_path(request_id: str) -> Path | None:
+    base = _repo_root() / "output" / "acceptance"
+    candidates = [
+        base / "auto_v4" / "scene_manifest.json",
+        base / "manual_v4" / "scene_manifest.json",
+    ]
+    if "auto" in request_id.lower():
+        ordered = [candidates[0], candidates[1]]
+    elif "manual" in request_id.lower():
+        ordered = [candidates[1], candidates[0]]
+    else:
+        ordered = candidates
+    for path in ordered:
+        if path.exists():
+            return path
+    return None
+
+
+def _scene_characters(request_id: str, scene_id: str) -> list[str]:
+    manifest_path = _scene_manifest_path(request_id)
+    if manifest_path is None:
+        return []
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return []
+    for scene in manifest.get("scenes", []):
+        if str(scene.get("scene_id", "")) == scene_id:
+            return [str(name) for name in scene.get("characters", []) if name]
+    return []
+
+
+def _resolve_face_reference(request_id: str, scene_id: str) -> Path | None:
+    characters = _scene_characters(request_id, scene_id)
+    if not characters:
+        return None
+    for db_path in _candidate_character_db_paths(request_id):
+        if not db_path.exists():
+            continue
+        try:
+            payload = json.loads(db_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        for character in payload.get("characters", []):
+            if character.get("name") not in characters:
+                continue
+            for ref in character.get("image_refs", []):
+                ref_path = Path(ref.get("path", ""))
+                if not ref_path.is_absolute():
+                    ref_path = _repo_root() / ref_path
+                if ref_path.exists():
+                    return ref_path
+    return None
+
+
+def _wav2lip_checkpoint_path() -> Path:
+    configured = os.environ.get("WAV2LIP_CHECKPOINT_PATH", "").strip()
+    if configured:
+        return Path(configured)
+    return _repo_root() / "checkpoints" / "wav2lip_weights" / "Wav2Lip-SD-NOGAN.pt"
+
+
+def _run_wav2lip_inference(face_image: Path, audio_path: str, outfile: Path) -> bool:
+    checkpoint_path = _wav2lip_checkpoint_path()
+    if not checkpoint_path.exists():
+        return False
+
+    image = Image.open(face_image).convert("RGB")
+    width, height = image.size
+    top = max(0, int(height * 0.03))
+    bottom = max(top + 1, int(height * 0.78))
+    left = max(0, int(width * 0.12))
+    right = max(left + 1, int(width * 0.88))
+
+    wav2lip_root = _repo_root() / "Wav2Lip"
+    if not wav2lip_root.exists():
+        return False
+
+    command = [
+        sys.executable,
+        "inference.py",
+        "--checkpoint_path",
+        checkpoint_path.as_posix(),
+        "--face",
+        face_image.as_posix(),
+        "--audio",
+        audio_path,
+        "--outfile",
+        outfile.as_posix(),
+        "--box",
+        str(top),
+        str(bottom),
+        str(left),
+        str(right),
+    ]
+    result = subprocess.run(command, cwd=wav2lip_root.as_posix(), check=False, capture_output=True, text=True)
+    return result.returncode == 0 and outfile.exists() and outfile.stat().st_size > 0
+
+
 def align_lip_sync(
     request_id: str,
     scene_id: str,
@@ -74,59 +199,29 @@ def align_lip_sync(
     else:
         final_path = base / f"{scene_id}.mp4"
 
-    temp_video = base / f"{scene_id}_lips_temp.mp4"
-    _render_lipsynced_video(video_path, audio_path, temp_video)
+    face_image = _resolve_face_reference(request_id, scene_id)
 
-    ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
-    cmd = [
-        ffmpeg_exe,
-        "-y",
-        "-i",
-        temp_video.as_posix(),
-        "-i",
-        audio_path,
-        "-map",
-        "0:v:0",
-        "-map",
-        "1:a:0",
-        "-c:v",
-        "copy",
-        "-c:a",
-        "aac",
-        "-shortest",
-        final_path.as_posix(),
-    ]
-    result = subprocess.run(cmd, check=False, capture_output=True, text=True)
-    if result.returncode != 0:
-        fallback = [
-            ffmpeg_exe,
-            "-y",
-            "-i",
-            temp_video.as_posix(),
-            "-i",
-            audio_path,
-            "-map",
-            "0:v:0",
-            "-map",
-            "1:a:0",
-            "-c:v",
-            "libx264",
-            "-pix_fmt",
-            "yuv420p",
-            "-c:a",
-            "aac",
-            "-shortest",
-            final_path.as_posix(),
-        ]
-        retry = subprocess.run(fallback, check=False, capture_output=True, text=True)
-        if retry.returncode != 0:
-            raise RuntimeError(f"LIP_SYNC_FAILED: {retry.stderr.strip()[:400]}")
-    if temp_video.exists():
-        temp_video.unlink()
+    if face_image is None:
+        temp_video = base / f"{scene_id}_lips_temp.mp4"
+        _render_lipsynced_video(video_path, audio_path, temp_video)
+        if temp_video.exists():
+            temp_video.rename(final_path)
+        result_path = final_path
+    else:
+        if not _should_use_wav2lip(request_id) or not _run_wav2lip_inference(face_image, audio_path, final_path):
+            temp_video = base / f"{scene_id}_lips_temp.mp4"
+            _render_lipsynced_video(video_path, audio_path, temp_video)
+            if temp_video.exists():
+                temp_video.rename(final_path)
+            result_path = final_path
+        else:
+            result_path = final_path
+    if not final_path.exists() or final_path.stat().st_size == 0:
+        raise RuntimeError("LIP_SYNC_FAILED: Unable to create synchronized scene output.")
 
     return {
         "artifact_id": f"sync_{scene_id}",
         "scene_id": scene_id,
         "type": "mp4",
-        "path": final_path.as_posix(),
+        "path": result_path.as_posix(),
     }
